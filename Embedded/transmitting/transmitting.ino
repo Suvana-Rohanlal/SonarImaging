@@ -6,17 +6,24 @@
 
 #include <ADC.h>
 #include <DMAChannel.h>
+#include "chirp.h"
 
-#define BUFFER_SIZE 10000                  // up to 85% of dynamic memory (65,536 bytes)
-#define SAMPLE_RATE 500000                   // see below maximum values
+#define reference_voltage 3.3
+#define ADC_res 65535
+#define DAC_res 4095
+#define DC_offset 1
+#define amp 1
+
+#define BUFFER_SIZE 17000                  // up to 85% of dynamic memory (65,536 bytes)
+#define SAMPLE_RATE 250000                   // see below maximum values
 #define SAMPLE_AVERAGING 0                  // 0, 4, 8, 16 or 32
 #define SAMPLING_GAIN 1                     // 1, 2, 4, 8, 16, 32 or 64
-#define SAMPLE_RESOLUTION 12                // 8, 10, 12 or 16 
+#define SAMPLE_RESOLUTION 16                // 8, 10, 12 or 16 
 
 
 
 // Main Loop Flow
-#define CHECKINPUT_INTERVAL   50000         // 20 times per second
+#define CHECKINPUT_INTERVAL   200        // 20 times per second
 #define DISPLAY_INTERVAL      100000        // 10 times per second
 #define SERIAL_PORT_SPEED     9600          // USB is always 12 Mbit/sec on teensy
 #define DEBUG                 false
@@ -51,6 +58,14 @@ ADC_REFERENCE               Vref     = ADC_REFERENCE::REF_3V3;
 ADC_SAMPLING_SPEED    samp_speed     = ADC_SAMPLING_SPEED::VERY_HIGH_SPEED;
 ADC_CONVERSION_SPEED  conv_speed     = ADC_CONVERSION_SPEED::VERY_HIGH_SPEED;
 
+float converter;
+volatile int first_wave =0;
+int i =0;
+int sample;
+int value;
+char input_command;
+int count=0;
+
 // Processing Buffer
 uint16_t processed_buf[BUFFER_SIZE]; // processed data buffer
 
@@ -74,7 +89,8 @@ void setup() { // =====================================================
   memset((void*)processed_buf, 0, sizeof(buf_b));
   
   // LED on, setup complete
-  digitalWriteFast(ledPin, HIGH);
+  //digitalWriteFast(ledPin, HIGH);
+  analogWriteResolution(12);
 
 } // setup =========================================================
 
@@ -84,44 +100,6 @@ long         inNumber = -1;
 boolean   chunk1_sent = false;
 boolean   chunk2_sent = false;
 boolean   chunk3_sent = false;
-
-
-void loop() { // ===================================================
-
-  // Keep track of loop time
-  currentTime = micros();
-  // Commands:
-  // c initiate single conversion
-  // p print buffer
-  
-  if ((currentTime-lastInAvail) >= CHECKINPUT_INTERVAL) {
-    lastInAvail = currentTime;
-    if (Serial.available()) {
-      inByte=Serial.read();
-      
-      if (inByte == 'c') { // single block conversion
-          if ((aorb_busy == 1) || (aorb_busy == 2)) { stop_ADC(); }
-          setup_ADC_single();
-          start_ADC();
-          wait_ADC_single();
-          stop_ADC();
-          adc->printError();
-          adc->resetError();
-      } else if (inByte == 'p') { // print buffer
-          printBuffer(buf_a, 0, BUFFER_SIZE-1);
-      }
-    } // end if serial input available
-  } // end check serial in time interval
-    
-  if ((currentTime-lastDisplay) >= DISPLAY_INTERVAL) {
-    lastDisplay = currentTime;
-    adc->printError();
-    adc->resetError();
-  } 
-    
-  
-
-} // end loop ======================================================
 
 
 // ADC
@@ -183,7 +161,7 @@ void wait_ADC_single() {
       break;
     }
   }
-  Serial.printf("Conversion complete in %d us\n", end_time-start_time);
+  //Serial.printf("Conversion complete in %d us\n", end_time-start_time);
 }
 
 void dma0_isr_single(void) {
@@ -313,3 +291,66 @@ void dumpDMA_TCD(const char *psz, DMABaseClass *dmabc)
                 tcd->CSR, tcd->BITER);
 
 }
+
+
+
+void loop() { // ===================================================
+
+  // Keep track of loop time
+  currentTime = micros();
+  // Commands:
+  // c initiate single conversion
+  // p print buffer
+  
+  if ((currentTime-lastInAvail) >= CHECKINPUT_INTERVAL) {
+    lastInAvail = currentTime;
+    if (Serial.available()) {
+      inByte=Serial.read();
+      
+      if(inByte == 's'){
+          while(1)
+          {
+            float val = waveformsTable[first_wave][i];
+            float range = (amp*DAC_res)/reference_voltage;
+            float out = val*range;
+            float DACoffset = (DC_offset*DAC_res)/reference_voltage;
+            float nOut = out + DACoffset;
+            analogWrite(A21,nOut);
+
+            i++;
+            if(i==maxSamplesNum){
+                i=0;
+                count++;
+                if(count==1){
+                    count=0;
+                    break;
+                  }
+              }
+
+              sample = 1;
+              delayMicroseconds(sample);
+          }
+        }
+      else if (inByte == 'c') { // single block conversion
+          if ((aorb_busy == 1) || (aorb_busy == 2)) { stop_ADC(); }
+          setup_ADC_single();
+          start_ADC();
+          wait_ADC_single();
+          stop_ADC();
+          adc->printError();
+          adc->resetError();
+      } else if (inByte == 'p') { // print buffer
+          printBuffer(buf_a, 0, BUFFER_SIZE-1);
+      }
+    } // end if serial input available
+  } // end check serial in time interval
+    
+  if ((currentTime-lastDisplay) >= DISPLAY_INTERVAL) {
+    lastDisplay = currentTime;
+    adc->printError();
+    adc->resetError();
+  } 
+    
+  
+
+} // end loop ======================================================
