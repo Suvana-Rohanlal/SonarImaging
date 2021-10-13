@@ -5,7 +5,9 @@ using FFTW
 using JLD2
 using FileIO
 using OrderedCollections
-
+using LibSerialPort
+list_ports()  
+ports = get_port_list()
 #Rect
 rect(t) = (abs.(t) .<= 0.5)*1.0
 
@@ -64,6 +66,7 @@ function baseband(v_window)
 end
 
 function signalProcessing()
+	println("Starting...")
 	#Specify parameters of chirp pulse
 	f0 = 39000; # Centre frequency is 40 kHz
 	B = 2000; # Chirp bandwidth
@@ -93,7 +96,7 @@ function signalProcessing()
 	#list_ports()
 	#send chirp command to Teensy
 	println("connecting to port")
-	sp=open("/dev/cu.usbmodem58714801",9600) # Or whatever in Linux, Windows or Mac. //38400
+	sp=open(ports[1],9600) # Or whatever in Linux, Windows or Mac. //38400
 	#clear buffer
 	while(bytesavailable(sp) > 0)
 	     readline(sp);
@@ -116,7 +119,18 @@ function signalProcessing()
         	v1[n] = parse(Int32, (readline(sp)));
          	#println(v[n]);
          	n = n+1;
+         	if(n%1000 == 0)
+         		print(n)
+         	end
 
     	end
-	
+    	
+    	close(sp)
+    	
+    	v1 = v1[50:end-10] #ignore the first 50 samples and last sample
+    	v1 =  (v1 .* 3.3) / 65535
+
+	display(plot(r,real(v1)))	
 end
+
+signalProcessing()
