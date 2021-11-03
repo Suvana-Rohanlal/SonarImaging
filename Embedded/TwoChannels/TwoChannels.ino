@@ -26,8 +26,8 @@ bool          STREAM  = false;
 bool          VERBOSE = true;
 bool          BINARY = true;
 // I/O-Pins
-const int readPin0             = A0;
-const int readPin1             = A13;
+const int readPin0             = A0;//A0;
+const int readPin1             = A13;//A13;
 const int ledPin               = LED_BUILTIN;
 
  int i;
@@ -117,7 +117,7 @@ void sendChirp(){
 
 
   for(i=1;i<8380;i++){
-    float out = 1.5 * n[i];
+    float out = 1.5 * n[i];//1.5 * waveformsTable[1][i]; 
     analogWrite(A21,out); // writing to apin A21 of the teensy
    
    }

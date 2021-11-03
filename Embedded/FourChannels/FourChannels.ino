@@ -29,8 +29,8 @@ bool          BINARY = true;
 const int readPin0             =  A0;
 const int readPin1             = A13;
 const int ledPin               = LED_BUILTIN;
-int pinsADC0[4] = {A7, A6, A14, A15};
-int pinsADC1[4] = {A19, A20, A16, A18};
+int pinsADC0[2] = {A0, A15};//{A7, A6 };//
+int pinsADC1[2] = {A16, A17};//{A19, A20};//
 
  int i;
  int l;
@@ -44,7 +44,7 @@ int pinsADC1[4] = {A19, A20, A16, A18};
  //char n[234] = {0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x00, 0x06, 0x18, 0x33, 0x55, 0x7a, 0x9f, 0xc2, 0xde, 0xf2, 0xfc, 0xfd, 0xf4, 0xe2, 0xc9, 0xab, 0x8a, 0x69, 0x4a, 0x2e, 0x18, 0x09, 0x01, 0x01, 0x08, 0x15, 0x29, 0x40, 0x5b, 0x77, 0x93, 0xae, 0xc6, 0xda, 0xeb, 0xf6, 0xfd, 0xfe, 0xfa, 0xf2, 0xe6, 0xd6, 0xc4, 0xaf, 0x9a, 0x84, 0x6e, 0x59, 0x46, 0x35, 0x25, 0x18, 0x0e, 0x07, 0x02, 0x00, 0x01, 0x04, 0x09, 0x10, 0x18, 0x22, 0x2d, 0x39, 0x46, 0x53, 0x60, 0x6d, 0x7a, 0x87, 0x93, 0x9e, 0xa9, 0xb3, 0xbd, 0xc6, 0xcd, 0xd5, 0xdb, 0xe1, 0xe6, 0xea, 0xee, 0xf1, 0xf4, 0xf6, 0xf8, 0xfa, 0xfb, 0xfc, 0xfc, 0xfd, 0xfd, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfe, 0xfd, 0xfd, 0xfc, 0xfc, 0xfb, 0xfa, 0xf8, 0xf6, 0xf4, 0xf1, 0xee, 0xea, 0xe6, 0xe1, 0xdb, 0xd5, 0xcd, 0xc6, 0xbd, 0xb3, 0xa9, 0x9e, 0x93, 0x87, 0x7a, 0x6d, 0x60, 0x53, 0x46, 0x39, 0x2d, 0x22, 0x18, 0x10, 0x09, 0x04, 0x01, 0x00, 0x02, 0x07, 0x0e, 0x18, 0x25, 0x35, 0x46, 0x59, 0x6e, 0x84, 0x9a, 0xaf, 0xc4, 0xd6, 0xe6, 0xf2, 0xfa, 0xfe, 0xfd, 0xf6, 0xeb, 0xda, 0xc6, 0xae, 0x93, 0x77, 0x5b, 0x40, 0x29, 0x15, 0x08, 0x01, 0x01, 0x09, 0x18, 0x2e, 0x4a, 0x69, 0x8a, 0xab, 0xc9, 0xe2, 0xf4, 0xfd, 0xfc, 0xf2, 0xde, 0xc2, 0x9f, 0x7a, 0x55, 0x33, 0x18, 0x06, 0x00, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f};
  int ADC_Values [8380];
  int k;
- uint16_t bufferArray[8];
+ uint16_t bufferArray[4];
 //ADC & DMA Config
 ADC *adc = new ADC(); //adc object
 DMAChannel dma0;
@@ -119,7 +119,7 @@ void sendChirp(){
 
 
   for(i=1;i<8380;i++){
-    float out = 1 * n[i];
+    float out = 1.5 * n[i];
     analogWrite(A21,out); // writing to apin A21 of the teensy
    
    }
@@ -421,52 +421,63 @@ void loop() { // ===================================================
     if (Serial.available()) {
       inByte=Serial.read();
       if (inByte == 'c') { // single block conversion
-         for(int k=0; k<4; k++){
+         //for(int k=0; k<2; k++){
           if ((aorb_busy == 1) || (aorb_busy == 2)) { stop_ADC(); }
           //readPin0;
           setup_ADC_single();
-          start_ADC(pinsADC0[k], pinsADC1[k]);
+          start_ADC(pinsADC0[0], pinsADC1[0]);
           sendChirp(); // calling chirp pulse function
           wait_ADC_single();
           stop_ADC();
          // adc->printError();
           adc->resetError(); 
 
-          bufferArray[bufs] = buf_a;
+         /* bufferArray[bufs] = buf_a;
           bufs++;
           bufferArray[bufs] = buf_a1;
+          bufs++;*/
+         
+        // }  
+        }
+
+         else if (inByte == 'd') { // single block conversion
+         //for(int k=0; k<2; k++){
+          if ((aorb_busy == 1) || (aorb_busy == 2)) { stop_ADC(); }
+          //readPin0;
+          setup_ADC_single();
+          start_ADC(pinsADC0[1], pinsADC1[1]);
+          sendChirp(); // calling chirp pulse function
+          wait_ADC_single();
+          stop_ADC();
+         // adc->printError();
+          adc->resetError(); 
+
+         /* bufferArray[bufs] = buf_a;
           bufs++;
-         }  
-      }
+          bufferArray[bufs] = buf_a1;
+          bufs++;*/
+         
+        // }  
+        }
+      
       else if (inByte == 'p') { // print buffer
-          printBuffer(bufferArray[0], 0, BUFFER_SIZE-1);
+          printBuffer(buf_a, 0, BUFFER_SIZE-1);
       }
-       else if (inByte == 'z') { // print buffer
-          printBuffer(bufferArray[1], 0, BUFFER_SIZE-1);
+       else if (inByte == 'x') { // print buffer
+          printBuffer(buf_a1, 0, BUFFER_SIZE-1);
       }
-         else if (inByte == 'x') { // print buffer
+         /*else if (inByte == 'x') { // print buffer
           printBuffer(bufferArray[2], 0, BUFFER_SIZE-1);
       }
       else if (inByte == 's') { // print buffer
           printBuffer(bufferArray[3], 0, BUFFER_SIZE-1);
-      }
-       else if (inByte == 'v') { // print buffer
-          printBuffer(bufferArray[4], 0, BUFFER_SIZE-1);
-      }
-         else if (inByte == 'b') { // print buffer
-          printBuffer(bufferArray[5], 0, BUFFER_SIZE-1);
-      }
-      else if (inByte == 'n') { // print buffer
-          printBuffer(bufferArray[6], 0, BUFFER_SIZE-1);
-      }
-         else if (inByte == 'm') { // print buffer
-          printBuffer(bufferArray[7], 0, BUFFER_SIZE-1);
-      }
-
-
+      }*/
+     
+    }
+  
       
     } // end if serial input available
-  } // end check serial in time interval
+ // end check serial in time interval
     
   if ((currentTime-lastDisplay) >= DISPLAY_INTERVAL) {
     lastDisplay = currentTime;

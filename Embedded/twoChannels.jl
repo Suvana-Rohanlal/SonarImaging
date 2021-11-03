@@ -1,8 +1,10 @@
+#module twoChannels
 using SerialPorts
 #using PyPlot
 using Plots
 plotly() 
 using FFTW
+using Statistics
 
 
 list_serialports() 
@@ -18,7 +20,7 @@ B = 4000    # chirp bandwidth
 K = B/T     # chirp rate [Hz/s]
 f0 = fc-B/2
  #fs = 4*(1.6*B)
-fs = 400000#250000 #100000 400000
+fs = 500000#400000#250000 #100000 400000
 λ = c/fc #waveform
 
 ####################### Rect ####################################
@@ -37,12 +39,12 @@ function matchedFilter(V_TX,v_rx)
     V_RX = fft(v_rx) # Fourier transform received signal
     H = conj(V_TX) 
     V_MF = H.*V_RX     # Apply matched filter in frequency domain
-    v_mf = ifft(V_MF)  # Go back to time domain
+   # v_mf = ifft(V_MF)  # Go back to time domain
 end
 
 ################  Analytic signal ###################################
-function analytic(v_mf)
-    V_IN = fft(v_mf)
+function analytic(V_IN)
+   # V_IN = fft(v_mf)
     V_ANALYTIC = 2*V_IN;
     N1= length(V_IN)
 
@@ -80,7 +82,17 @@ function baseband(v_window,t)
     V_baseband = fft(v_baseband)
 end
 
+############### calculate dist ############
 
+function calc_td(target,receiver)
+    r = target-receiver
+    R = sqrt(sum(r.*r))
+    if(R== 2.0007838463962067)
+        print("true")
+    end
+    td = 2*R/c
+    return td
+end
 ############################# global variables #####################################
 
 z=""
@@ -89,6 +101,17 @@ d =""
 m= "" #replace d
 
 function signalProcessing()
+c = 343 # speed of sound in air
+r_max = 10
+
+fc=40000;   # center freq of chirp
+T=5E-3      # chirp pulse length
+B = 4000    # chirp bandwidth
+K = B/T     # chirp rate [Hz/s]
+f0 = fc-B/2
+ #fs = 4*(1.6*B)
+fs = 500000#400000#250000 #100000 400000
+λ = c/fc #waveform
     println("Emptying buffer")
     h = readavailable(sp) 
     println("Number of bytes emptied from buffer ",h)
@@ -140,7 +163,11 @@ function signalProcessing()
     v = Vector{Int64}(undef,len)
 
     for n=1:len
-	v[n] = parse(Int64, Z[n])
+    	#if n<4000
+    	#	v[n] = 33170
+    	#else
+		v[n] = parse(Int64, Z[n])
+	#end	
     end
     println("Number of ADC samples ",length(v))
     
@@ -183,11 +210,24 @@ function signalProcessing()
     	v2[k] = parse(Int64, L[k])
     end
     println("Number of ADC samples from the second receiver is ",length(v2))
+   # v_fill = Vector{Int64}(undef,4000) #fill(1.67, (1,4000))
+    v = v[2500:end-100] #ignore the first 50 samples and last sample    
+    v =  (v .* 3.3) / 65535 
+    v = v .- 1.67
     
-    v = v[50:end-10] #ignore the first 50 samples and last sample
-    v =  (v .* 3.3) / 65535
-    v2 = v2[50:end-10] #ignore the first 50 samples and last sample
-    v2 =  (v2 .* 3.3) / 65535
+    v= v .- mean(v)
+    nl = zeros(2450)	
+    append!(nl,v)
+    v= nl
+    #v = [v_fill; v];
+     v2 = v2[2500:end-100] #ignore the first 50 samples and last sample    
+    v2 =  (v2 .* 3.3) / 65535 
+    v2 = v2 .- 1.67
+    
+    v2= v2 .- mean(v2)
+    nl2 = zeros(2450)	
+    append!(nl2,v2)
+    v2= nl2
 
         numSamples = length(v)
 	Δt = 1/fs
@@ -230,31 +270,128 @@ function signalProcessing()
 	############### matched/inverse filter ###################
 	println("Inverse Filter")
 	#println("Matched filter")
-	#v_m = matchedFilter(V_TX,v1)
-	v_m=inverse(v, V_TX,f)
+	#v_m = matchedFilter(V_TX,v)
+	v_i=inverse(v, V_TX,f)
+	v_i2=inverse(v2, V_TX,f)
 	############### analytic signal #################
 	
 	println("Analytic")
-	v_an = analytic(v_m)
+	v_an = analytic(v_i)
+	v_an2 = analytic(v_i2)
 
 	##################### Baseband ################
 	println("Baseband")
 	v_bb = baseband(v_an,t)
 	v_bb = ifft(v_bb)
+	
+	v_bb2 = baseband(v_an2,t)
+	v_bb2 = ifft(v_bb2)
 	###################### window #################
 	
 	println("window")
 	v_w = window(v_bb,f)
-		
-	display(plot(v))
-	display(plot(v2))
+	
+	v_w2 = window(v_bb2,f)
+	
+	#v_fill = Vector{ComplexF64}(undef, 5000)#fill(0.1, (1,5000))#Vector{Int64}(undef,5000)	
+	#display(plot(v))
+	#display(plot(v2))
         v_b = ifft(v_w)
-	display(plot(s, v1))
-	#display(plot(s, v2))
-	display(plot(s,real.(v_m), label="Matched filter-time domain"))
+        v_b2 = ifft(v_w2)
+        #v_out = [v_fill;(v_b)]
+        
+        #append!(v_fill, v_b)
+	display(plot(s, v))
+	#display(plot( v2))
+	display(plot(s,real.(v_i), label="Inverse filter-frequency domain"))
 	display(plot(s,abs.(v_an), label="v_analytic - time domain"))
-	#display(plot(ifft(abs.(v_an)), label="v_analytic - time domain"))
+	#display(plot(real(fft(v_an)), label="v_analytic - freq domain"))
 	#display(plot(real.(v_in), label="v_inverse - freq"))
 	display(plot(s,abs.(v_bb),label="v_baseband - time domain"))
 	display(plot(s,abs.(v_b),label="output - time domain"))
+	#display(plot(angle.(v_b),label="Angle of baseband"))
+	#display(plot(s,abs.(v_b2),label="output - time domain"))
+	#display(plot(s,(v_fill),label="output - time domain"))
+	#println(typeof(v_b))
+	#	println(typeof(v_fill))
+	################ image ###############
+	c = 343;
+	fs = 500000; # sample rate of sonar, 44100 original 100 000
+	dt = 1/fs; # sample spacing
+	TargetXRange=1 #2
+	global k =0
+	for i in -1:0.005:1#TargetXRange
+     		global k= k+1
+	end
+
+	TargetYRange=6
+	global	j =0
+	for s in 1:0.005:TargetYRange
+	     global j= j+1
+	end
+	
+	numOfReceivers = 2
+	ImageArray = zeros(Complex, k,j)
+	#reshape(Complex.(ImageArray),k,j)
+
+	receiverSpacing = 0.016
+	x1 = -((numOfReceivers-1)/2*receiverSpacing)
+	indexOfReceived =0
+	##################### receiver 1 ###########################################
+	#for n in 1:numOfReceivers
+    		xn = x1+(1-1)*receiverSpacing
+    		receiver_position = [-0.008, 0.0, 0.0]
+    		r_tx = v#d[indexOfReceived].pulse
+    		indexOfReceived = indexOfReceived+1
+    		lengthOfReceived = length(v)
+   		x1=1
+    		y1=1
+    
+    		for x in -TargetXRange/2:0.005:TargetXRange/2
+      	  		for y in 1:0.005:6
+            		td_calculated = calc_td([x,y,0],receiver_position)
+            		tdArray_index = Int(round(td_calculated/dt))
+            		if tdArray_index <= lengthOfReceived
+                		i=im
+                		ImageArray[CartesianIndex.( x1,y1)] += (r_tx[tdArray_index]) * exp(i*2*pi*f0*td_calculated)
+                
+            		end 
+            		y1+=1
+        	end
+        	x1=x1+1
+        	y1=1
+    	#end
+    	
+    	
+    	######################## receiver 2 #############################
+    		xn = x1+(1-1)*receiverSpacing
+    		receiver_position = [0.008, 0.0, 0.0]
+    		r_tx = v2#d[indexOfReceived].pulse
+    		indexOfReceived = indexOfReceived+1
+    		lengthOfReceived = length(v2)
+   		x1=1
+    		y1=1
+    
+    		for x in -TargetXRange/2:0.005:TargetXRange/2
+      	  		for y in 1:0.005:6
+            		td_calculated = calc_td([x,y,0],receiver_position)
+            		tdArray_index = Int(round(td_calculated/dt))
+            		if tdArray_index <= lengthOfReceived
+                		i=im
+                		ImageArray[CartesianIndex.( x1,y1)] += (r_tx[tdArray_index]) * exp(i*2*pi*f0*td_calculated)
+                
+            		end 
+            		y1+=1
+        	end
+        	x1=x1+1
+        	y1=1
+
+#might not work
+    	
+    	return ImageArray
 end
+end
+
+end
+
+signalProcessing() 
