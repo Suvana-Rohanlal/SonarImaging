@@ -119,7 +119,7 @@ void sendChirp(){
 
 
   for(i=1;i<8380;i++){
-    float out = 1 * n[i];
+    float out = 1.5 * n[i];
     analogWrite(A21,out); // writing to apin A21 of the teensy
    
    }
@@ -421,47 +421,88 @@ void loop() { // ===================================================
     if (Serial.available()) {
       inByte=Serial.read();
       if (inByte == 'c') { // single block conversion
-         for(int k=0; k<4; k++){
+         //for(int k=0; k<2; k++){
           if ((aorb_busy == 1) || (aorb_busy == 2)) { stop_ADC(); }
           //readPin0;
           setup_ADC_single();
-          start_ADC(pinsADC0[k], pinsADC1[k]);
+          start_ADC(pinsADC0[0], pinsADC1[0]);
           sendChirp(); // calling chirp pulse function
           wait_ADC_single();
           stop_ADC();
          // adc->printError();
           adc->resetError(); 
 
-          bufferArray[bufs] = buf_a;
+         /* bufferArray[bufs] = buf_a;
           bufs++;
           bufferArray[bufs] = buf_a1;
+          bufs++;*/
+         
+        // } 
+      } 
+         else if (inByte == 'd') { // single block conversion
+         //for(int k=0; k<2; k++){
+          if ((aorb_busy == 1) || (aorb_busy == 2)) { stop_ADC(); }
+          //readPin0;
+          setup_ADC_single();
+          start_ADC(pinsADC0[1], pinsADC1[1]);
+          sendChirp(); // calling chirp pulse function
+          wait_ADC_single();
+          stop_ADC();
+         // adc->printError();
+          adc->resetError(); 
+
+         /* bufferArray[bufs] = buf_a;
           bufs++;
-         }  
-      }
+          bufferArray[bufs] = buf_a1;
+          bufs++;*/
+         
+        // }  
+        }
+         else if (inByte == 'e') { // single block conversion
+         //for(int k=0; k<2; k++){
+          if ((aorb_busy == 1) || (aorb_busy == 2)) { stop_ADC(); }
+          //readPin0;
+          setup_ADC_single();
+          start_ADC(pinsADC0[2], pinsADC1[2]);
+          sendChirp(); // calling chirp pulse function
+          wait_ADC_single();
+          stop_ADC();
+         // adc->printError();
+          adc->resetError(); 
+
+         /* bufferArray[bufs] = buf_a;
+          bufs++;
+          bufferArray[bufs] = buf_a1;
+          bufs++;*/
+         
+        // }  
+        }
+         else if (inByte == 'f') { // single block conversion
+         //for(int k=0; k<2; k++){
+          if ((aorb_busy == 1) || (aorb_busy == 2)) { stop_ADC(); }
+          //readPin0;
+          setup_ADC_single();
+          start_ADC(pinsADC0[3], pinsADC1[3]);
+          sendChirp(); // calling chirp pulse function
+          wait_ADC_single();
+          stop_ADC();
+         // adc->printError();
+          adc->resetError(); 
+
+         /* bufferArray[bufs] = buf_a;
+          bufs++;
+          bufferArray[bufs] = buf_a1;
+          bufs++;*/
+         
+        // }  
+        }
       else if (inByte == 'p') { // print buffer
-          printBuffer(bufferArray[0], 0, BUFFER_SIZE-1);
+          printBuffer(buf_a, 0, BUFFER_SIZE-1);
       }
-       else if (inByte == 'z') { // print buffer
-          printBuffer(bufferArray[1], 0, BUFFER_SIZE-1);
+       else if (inByte == 'x') { // print buffer
+          printBuffer(buf_a1, 0, BUFFER_SIZE-1);
       }
-         else if (inByte == 'x') { // print buffer
-          printBuffer(bufferArray[2], 0, BUFFER_SIZE-1);
-      }
-      else if (inByte == 's') { // print buffer
-          printBuffer(bufferArray[3], 0, BUFFER_SIZE-1);
-      }
-       else if (inByte == 'v') { // print buffer
-          printBuffer(bufferArray[4], 0, BUFFER_SIZE-1);
-      }
-         else if (inByte == 'b') { // print buffer
-          printBuffer(bufferArray[5], 0, BUFFER_SIZE-1);
-      }
-      else if (inByte == 'n') { // print buffer
-          printBuffer(bufferArray[6], 0, BUFFER_SIZE-1);
-      }
-         else if (inByte == 'm') { // print buffer
-          printBuffer(bufferArray[7], 0, BUFFER_SIZE-1);
-      }
+      
 
 
       

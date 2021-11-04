@@ -65,5 +65,5 @@ coordinates = [[-0.015,0,0], [-0.005,0,0], [0.005,0,0], [0.015,0,0]]
 
 y=-1:0.005:TargetXRange
 x=1:0.005:TargetYRange
-Plots.heatmap((x,y,(abs.(ImageArray))), xlabel="Y", ylabel="X")
+Plots.heatmap((x,y,(abs.(ImageArray).^0.35)), xlabel="Y", ylabel="X")
     
