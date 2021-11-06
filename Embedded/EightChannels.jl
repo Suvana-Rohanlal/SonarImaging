@@ -718,6 +718,10 @@ function signalProcessing()
 	v_m2=inverse(v2, V_TX,f)
 	v_m3=inverse(v3, V_TX,f)
 	v_m4=inverse(v4, V_TX,f)
+	v_m5=inverse(v5, V_TX,f)
+	v_m6=inverse(v6, V_TX,f)
+	v_m7=inverse(v7, V_TX,f)
+	v_m8=inverse(v8, V_TX,f)
 	############### analytic signal #################
 	
 	println("Analytic")
@@ -725,6 +729,10 @@ function signalProcessing()
 	v_an2 = analytic(v_m2)
 	v_an3 = analytic(v_m3)
 	v_an4 = analytic(v_m4)
+	v_an5 = analytic(v_m5)
+	v_an6 = analytic(v_m6)
+	v_an7 = analytic(v_m7)
+	v_an8 = analytic(v_m8)
 
 
 	##################### Baseband ################
@@ -737,6 +745,15 @@ function signalProcessing()
 	v_bb3 = ifft(v_bb3)
 	v_bb4 = baseband(v_an4,t)
 	v_bb4 = ifft(v_bb4)
+	v_bb5 = baseband(v_an5,t)
+	v_bb5 = ifft(v_bb5)
+	v_bb6 = baseband(v_an6,t)
+	v_bb6 = ifft(v_bb6)
+	v_bb7 = baseband(v_an7,t)
+	v_bb7 = ifft(v_bb7)
+	v_bb8 = baseband(v_an8,t)
+	v_bb8 = ifft(v_bb8)
+	
 	###################### window #################
 	
 	println("window")
@@ -744,28 +761,34 @@ function signalProcessing()
 	v_w2 = window(v_bb2,f)
 	v_w3 = window(v_bb3,f)
 	v_w4 = window(v_bb4,f)
-		
+	v_w5 = window(v_bb5,f)
+	v_w6 = window(v_bb6,f)
+	v_w7 = window(v_bb7,f)
+	v_w8 = window(v_bb8,f)	
 
         v_b = ifft(v_w)
         v_b2 = ifft(v_w2)
         v_b3 = ifft(v_w3)
         v_b4 = ifft(v_w4) 
-        
+         v_b5 = ifft(v_w5)
+        v_b6 = ifft(v_w6)
+        v_b7 = ifft(v_w7)
+        v_b8 = ifft(v_w8) 
             
 	display(plot(s, v))
-	display(plot(s, v2))
+	#=display(plot(s, v2))
 	display(plot(s, v3))
 	display(plot(s, v4))
 	display(plot(s, v5))
 	display(plot(s, v6))
 	display(plot(s, v7))
-	display(plot(s, v8	))
-	#display(plot(s,real.(v_m), label="Inverse filter-freq domain"))
-	#display(plot(s,abs.(v_an), label="v_analytic - time domain"))
+	display(plot(s, v8	))=#
+	display(plot(s,real.(v_m), label="Inverse filter-freq domain"))
+	display(plot(s,abs.(v_an), label="v_analytic - time domain"))
 	#display(plot(ifft(abs.(v_an)), label="v_analytic - time domain"))
 	#display(plot(real.(v_in), label="v_inverse - freq"))
-	#display(plot(s,abs.(v_bb),label="v_baseband - time domain"))
-	#display(plot(s,abs.(v_b),label="output - time domain"))
+	display(plot(s,abs.(v_bb),label="v_baseband - time domain"))
+	display(plot(s,abs.(v_b),label="output - time domain"))
 	
 	
 	ImagingDict = OrderedDict{Any,Any}("transmit" => v_tx)
@@ -773,6 +796,10 @@ function signalProcessing()
 	push!(ImagingDict,2 => v2)
 	push!(ImagingDict,3 => v3)
 	push!(ImagingDict,4 => v4)
+	push!(ImagingDict,5 => v5)
+	push!(ImagingDict,6 => v6)
+	push!(ImagingDict,7 => v7)
+	push!(ImagingDict,8 => v8)
 	
 	save("BasebandedSignal.jld2", "baseband",ImagingDict)
 	#=arrRec[4]
@@ -788,4 +815,4 @@ function signalProcessing()
 
 end
 
-signalProcessing()
+#signalProcessing()

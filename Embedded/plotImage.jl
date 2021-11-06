@@ -1,7 +1,7 @@
 using JLD2
 using FileIO
 using Plots; gr()
-include("./fourChannels.jl")
+include("./EightChannels.jl")
 
 signalProcessing()
 
@@ -13,12 +13,19 @@ lengthOfTransmitted = length(v_tx)
 r_tx = d[1];
 
 lengthOfReceived = length(r_tx)
-coordinates = [[-0.015,0,0], [-0.005,0,0], [0.005,0,0], [0.015,0,0]]
+
+########## 4-elements #######################
+#coordinates = [[-0.015,0,0], [-0.005,0,0], [0.005,0,0], [0.015,0,0]]
+########## 8-elements #######################
+coordinates = [[-0.035,0,0],[-0.025,0,0],[-0.015,0,0], [-0.005,0,0], [0.005,0,0], [0.015,0,0],[0.025,0,0],[0.035,0,0]]
 ################ image ###############
 	c = 343;
 	fs = 500000; # sample rate of sonar, 44100 original 100 000
 	dt = 1/fs; # sample spacing
-	TargetXRange=3
+	########### 4-element #############
+	#TargetXRange=3 
+	########### 8-element #############
+	TargetXRange=2
 	global k =0
 	for i in 0:0.005:TargetXRange
      		global k=k+1
@@ -30,7 +37,7 @@ coordinates = [[-0.015,0,0], [-0.005,0,0], [0.005,0,0], [0.015,0,0]]
 	     global j=j+1
 	end
 	
-	numOfReceivers = 4
+	numOfReceivers = 8
 	ImageArray = zeros(Complex,k,j)
 	#reshape(Complex.(ImageArray),k,j)
 
@@ -65,5 +72,5 @@ coordinates = [[-0.015,0,0], [-0.005,0,0], [0.005,0,0], [0.015,0,0]]
 
 y=-1:0.005:TargetXRange
 x=1:0.005:TargetYRange
-Plots.heatmap((x,y,(abs.(ImageArray).^0.35)), xlabel="Y", ylabel="X")
+Plots.heatmap((x,y,(abs.(ImageArray))), xlabel="Y", ylabel="X")
     

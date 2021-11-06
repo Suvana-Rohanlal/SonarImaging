@@ -93,6 +93,8 @@ function calc_td(target,receiver)
     td = 2*R/c
     return td
 end
+
+
 ############################# global variables #####################################
 
 z=""
@@ -301,20 +303,29 @@ fs = 500000#400000#250000 #100000 400000
         #v_out = [v_fill;(v_b)]
         
         #append!(v_fill, v_b)
-	display(plot(s, v))
+	display(plot(s, v, label="Received 1"))
+	display(plot(s, v2, label="Received 2"))
 	#display(plot( v2))
-	display(plot(s,real.(v_i), label="Inverse filter-frequency domain"))
-	display(plot(s,abs.(v_an), label="v_analytic - time domain"))
+	#display(plot(s,real.(v_i), label="Inverse filter-frequency domain"))
+	#display(plot(s,abs.(v_an), label="v_analytic - time domain"))
 	#display(plot(real(fft(v_an)), label="v_analytic - freq domain"))
 	#display(plot(real.(v_in), label="v_inverse - freq"))
-	display(plot(s,abs.(v_bb),label="v_baseband - time domain"))
-	display(plot(s,abs.(v_b),label="output - time domain"))
-	#display(plot(angle.(v_b),label="Angle of baseband"))
+	display(plot(s,abs.(v_bb),label="v_baseband 1- time domain"))
+	display(plot(s,abs.(v_bb2),label="v_baseband 2- time domain"))
+	display(plot(s,abs.(v_b),label="output 1- time domain"))
+	display(plot(s,abs.(v_b2),label="output 2- time domain"))
+	display(plot(angle.(v_b),label="Angle of baseband 1"))
+	display(plot(angle.(v_b2),label="Angle of baseband 2"))
 	#display(plot(s,abs.(v_b2),label="output - time domain"))
 	#display(plot(s,(v_fill),label="output - time domain"))
 	#println(typeof(v_b))
 	#	println(typeof(v_fill))
-	################ image ###############
+	
+	
+	
+	
+	
+	#=################ image ###############
 	c = 343;
 	fs = 500000; # sample rate of sonar, 44100 original 100 000
 	dt = 1/fs; # sample spacing
@@ -388,10 +399,10 @@ fs = 500000#400000#250000 #100000 400000
 
 #might not work
     	
-    	return ImageArray
-end
+    	return ImageArray=#
 end
 
-end
+
+signalProcessing()
 
 signalProcessing() 

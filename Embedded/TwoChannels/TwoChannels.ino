@@ -27,7 +27,7 @@ bool          VERBOSE = true;
 bool          BINARY = true;
 // I/O-Pins
 const int readPin0             = A0;//A0;
-const int readPin1             = A13;//A13;
+const int readPin1             = A16;//A13;//A13;
 const int ledPin               = LED_BUILTIN;
 
  int i;
